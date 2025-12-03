@@ -192,10 +192,23 @@ const App: React.FC = () => {
       
       setChatHistory([greetingMsg, summaryMsg]);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Analysis failed", error);
       setAppState(AppState.INTAKE);
-      alert("Analysis failed. Please try again.");
+      
+      let errorMessage = "Analysis failed. Please try again.";
+      
+      if (error.message) {
+          if (error.message.includes("API key")) {
+              errorMessage = "API Key Invalid or Missing. Please check your Vercel Environment Variables.";
+          } else if (error.message.includes("404")) {
+              errorMessage = "AI Model Not Found. The selected model might be unavailable.";
+          } else if (error.message.includes("503")) {
+              errorMessage = "Service Temporarily Unavailable. Please try again in a moment.";
+          }
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsProcessing(false);
     }
@@ -888,7 +901,7 @@ const App: React.FC = () => {
         `}>
             <div className={`p-5 border-b flex justify-between items-center rounded-t-[2rem] ${theme.panelBorder}`}>
                 <h3 className={`font-bold flex items-center text-[10px] uppercase tracking-[0.2em] ${theme.text}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full mr-3 animate-pulse ${agentPersona === 'FRIDAY' ? 'bg-blue-500' : 'bg-orange-500'}`}></span>
+                    <span className={`w-1.5 h-1.5 rounded-full mr-3 animate-pulse ${agentPersona === 'FRIDAY' ? 'bg-blue-500' : 'bg-orange-500'} `}></span>
                     System Log
                 </h3>
                 <div className="flex items-center space-x-2">
