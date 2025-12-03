@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { geminiService } from './services/geminiService';
+import { parseDocument } from './utils/fileParsing';
 import { AppState, ChatMessage, ResumeData, OptimizationFilter, RewriteOption, SummaryOptimization, SkillsOptimization, AgentPersona } from './types';
 import { AGENT_CONFIG, OPTIMIZATION_OPTIONS } from './constants';
 import { 
   CheckCircleIcon, AlertTriangleIcon, 
   SendIcon, SparklesIcon, ArrowRightIcon, FileTextIcon, TargetIcon,
   CopyIcon, MinimizeIcon, MessageCircleIcon, ChevronLeftIcon, ChevronRightIcon, SlidersIcon,
-  RefreshCwIcon, ChevronDownIcon, ChevronUpIcon, TrashIcon
+  RefreshCwIcon, ChevronDownIcon, ChevronUpIcon, TrashIcon, UploadIcon
 } from './components/Icons';
 
 // --- AUTHENTIC THEME SYSTEM ---
@@ -74,13 +75,15 @@ const AICoreSwitch: React.FC<{ persona: AgentPersona; onToggle: () => void }> = 
             ${persona === 'FRIDAY' ? 'translate-x-0 bg-[#007AFF]' : 'translate-x-[100%] bg-[#FF4500]'}
           `}
         >
-             {/* IMAGE RESTORED & BLENDED */}
+             {/* IMAGE RESTORED & BLENDED & ANIMATED */}
              <div className="absolute inset-0 w-full h-full opacity-80 mix-blend-overlay">
                  <img 
                     src="https://www.insidequantumtechnology.com/wp-content/uploads/2024/10/unnamed-1024x1024.png" 
                     alt="Core Texture" 
                     className={`w-full h-full object-cover filter transition-all duration-700
-                        ${persona === 'FRIDAY' ? 'hue-rotate-180 brightness-110 saturate-150' : 'hue-rotate-0 brightness-75 contrast-125'}
+                        ${persona === 'FRIDAY' 
+                            ? 'hue-rotate-180 brightness-110 saturate-150 animate-pulse-fast' 
+                            : 'hue-rotate-0 brightness-75 contrast-125 animate-breathe-deep'}
                     `}
                  />
              </div>
@@ -101,6 +104,9 @@ const App: React.FC = () => {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Dashboard State - Independent Sections
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -173,6 +179,46 @@ const App: React.FC = () => {
   };
 
   // --- Handlers ---
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await processFile(file);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      await processFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const processFile = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const text = await parseDocument(file);
+      setResumeText(text);
+      // Optional: Auto-submit after upload
+      // handleResumeSubmit(); 
+    } catch (error: any) {
+      alert(`Error reading file: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleResumeSubmit = async () => {
     if (!resumeText.trim()) return;
@@ -383,21 +429,53 @@ const App: React.FC = () => {
         </p>
       </div>
       
-      <div className={`w-full p-2 rounded-[2rem] shadow-2xl animate-fade-in transition-all bg-gradient-to-br ${agentPersona === 'FRIDAY' ? 'from-white/80 to-blue-50/50' : 'from-[#1A1A1A] to-black'} border ${theme.panelBorder} backdrop-blur-xl relative group`} style={{animationDelay: '0.1s'}}>
+      <div 
+        className={`w-full p-2 rounded-[2rem] shadow-2xl animate-fade-in transition-all bg-gradient-to-br ${agentPersona === 'FRIDAY' ? 'from-white/80 to-blue-50/50' : 'from-[#1A1A1A] to-black'} border ${theme.panelBorder} backdrop-blur-xl relative group ${dragActive ? `scale-[1.02] ring-2 ${theme.highlightRing}` : ''}`} 
+        style={{animationDelay: '0.1s'}}
+        onDragEnter={handleDrag}
+      >
         {/* Glow effect behind panel */}
         <div className={`absolute -inset-1 rounded-[2rem] bg-gradient-to-r ${theme.accentGradient} opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-1000`}></div>
         
+        {/* Drag Overlay */}
+        {dragActive && (
+          <div className="absolute inset-0 z-50 rounded-[2rem] bg-black/50 backdrop-blur-sm flex items-center justify-center border-2 border-dashed border-white/50" onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}>
+            <div className="text-center pointer-events-none">
+              <UploadIcon className="w-16 h-16 mx-auto text-white mb-4 animate-bounce" />
+              <p className="text-xl font-bold text-white tracking-widest uppercase">Drop Protocol File Here</p>
+            </div>
+          </div>
+        )}
+
         <div className={`relative rounded-[1.5rem] p-4 md:p-8 ${agentPersona === 'FRIDAY' ? 'bg-white/90' : 'bg-[#0F0F0F]'}`}>
+            
+            {/* File Upload Header */}
+            <div className="flex justify-between items-center mb-4">
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${theme.subtext}`}>Input Stream</span>
+                <div className="flex space-x-2">
+                   <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".pdf,.docx,.txt" />
+                   <button 
+                     onClick={() => fileInputRef.current?.click()}
+                     className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider transition-colors ${agentPersona === 'FRIDAY' ? 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-blue-500' : 'border-white/10 text-gray-400 hover:bg-white/5 hover:text-white'}`}
+                   >
+                      <UploadIcon className="w-3 h-3" />
+                      <span>{isUploading ? 'Parsing...' : 'Upload PDF / DOCX'}</span>
+                   </button>
+                </div>
+            </div>
+
             <textarea
-            className={`w-full h-64 md:h-80 p-4 md:p-6 rounded-xl resize-none text-base md:text-lg leading-relaxed font-light outline-none transition-all
-                ${agentPersona === 'FRIDAY' 
-                ? 'bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-100' 
-                : 'bg-black/40 text-gray-200 placeholder-gray-700 focus:bg-black/60 focus:ring-1 focus:ring-orange-500/20'}
-            `}
-            placeholder="Initialize protocol. Paste career data..."
-            value={resumeText}
-            onChange={(e) => setResumeText(e.target.value)}
+              className={`w-full h-64 md:h-80 p-4 md:p-6 rounded-xl resize-none text-base md:text-lg leading-relaxed font-light outline-none transition-all
+                  ${agentPersona === 'FRIDAY' 
+                  ? 'bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-100' 
+                  : 'bg-black/40 text-gray-200 placeholder-gray-700 focus:bg-black/60 focus:ring-1 focus:ring-orange-500/20'}
+              `}
+              placeholder={isUploading ? "Extracting data from document..." : "Initialize protocol. Paste career data or Drop PDF/DOCX here..."}
+              value={resumeText}
+              onChange={(e) => setResumeText(e.target.value)}
+              disabled={isUploading}
             />
+            
             <div className="mt-6 md:mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
                 <div className={`text-[10px] font-bold tracking-widest uppercase ${theme.subtext} flex items-center`}>
                     <div className={`w-1.5 h-1.5 rounded-full mr-2 ${resumeText.length > 50 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-gray-400'}`}></div>

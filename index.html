@@ -96,6 +96,23 @@
         0%, 100% { opacity: 0.6; transform: scale(1); }
         50% { opacity: 1; transform: scale(1.1); }
       }
+      
+      /* Toggle Core Animations */
+      @keyframes pulseFast {
+        0%, 100% { transform: scale(1.05); opacity: 0.9; }
+        50% { transform: scale(1.15); opacity: 1; }
+      }
+      .animate-pulse-fast {
+        animation: pulseFast 1.5s ease-in-out infinite;
+      }
+
+      @keyframes breatheDeep {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
+      }
+      .animate-breathe-deep {
+        animation: breatheDeep 5s ease-in-out infinite;
+      }
 
       /* Custom Scrollbar - Minimalist */
       ::-webkit-scrollbar {
@@ -176,7 +193,9 @@
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
     "react/": "https://aistudiocdn.com/react@^19.2.1/",
     "vite": "https://aistudiocdn.com/vite@^7.2.6",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "pdfjs-dist": "https://aistudiocdn.com/pdfjs-dist@^5.4.449",
+    "mammoth": "https://aistudiocdn.com/mammoth@^1.11.0"
   }
 }
 </script>
