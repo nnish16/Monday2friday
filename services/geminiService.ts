@@ -2,18 +2,15 @@ import { AGENT_CONFIG, OPTIMIZATION_OPTIONS, PM_SUMMARY_TEMPLATE } from "../cons
 import { ResumeData, OptimizationFilter, SummaryOptimization, SkillsOptimization, AgentPersona } from "../types";
 
 // --- API CONFIGURATION ---
-// STRICTLY load the API key. No fallback to empty string or we want it to fail loudly.
-const API_KEY = 
-    (process.env as any).OPENROUTER_API_KEY || 
-    (process.env as any).GOOGLE_API_KEY || 
-    (process.env as any).API_KEY;
+// STRICTLY load the API key from the injected process.env.API_KEY
+// We do not check other variables here because Vite defines this specific one.
+const API_KEY = (process.env as any).API_KEY;
 
 if (!API_KEY) {
     console.error("[System] CRITICAL ERROR: No API Key found in environment variables.");
 }
 
 // --- SCHEMAS (JSON Structure Definitions) ---
-// We stringify these to inject into the prompt
 const ANALYSIS_SCHEMA = {
     healthScore: "number (1-10)",
     redFlags: ["string", "string"],
@@ -75,7 +72,6 @@ export class GeminiService {
 
   /**
    * PURE OPENROUTER CALL
-   * Replaces the Google SDK completely.
    */
   private async callOpenRouter(prompt: string, schema?: any, isChat = false): Promise<any> {
       if (!API_KEY) {
@@ -100,7 +96,8 @@ export class GeminiService {
       ];
 
       try {
-          console.log(`[OpenRouter] Sending request to ${modelId}...`);
+          // Log (masked) for debugging
+          console.log(`[OpenRouter] Sending request to ${modelId} with key starting: ${API_KEY.substring(0, 8)}...`);
 
           const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
               method: "POST",
@@ -148,7 +145,7 @@ export class GeminiService {
       }
   }
 
-  // --- PUBLIC METHODS (unchanged signature) ---
+  // --- PUBLIC METHODS ---
 
   async analyzeResume(text: string): Promise<ResumeData> {
     const prompt = `
@@ -163,7 +160,6 @@ export class GeminiService {
 
     const data = await this.callOpenRouter(prompt, ANALYSIS_SCHEMA);
     
-    // Map response to internal ResumeData structure if needed
     return {
         healthScore: data.healthScore || 5,
         redFlags: data.redFlags || [],
