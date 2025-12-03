@@ -1,4 +1,3 @@
-
 import { AgentPersona } from "./types";
 
 export const PM_SUMMARY_TEMPLATE = `Experienced X [field] PM OR X+ years in Y [field]; expertise in X, Y, Z [verticals, industries, specialties] at X, Y, Z [companies and/or startups]; $X in revenue / volume servicing X customers / clients; [any other important callouts]; X + Y [Education].`;
@@ -44,7 +43,8 @@ export const AGENT_CONFIG: Record<AgentPersona, { name: string; acronym: string;
     systemInstruction: FRIDAY_SYSTEM_INSTRUCTION,
     greeting: "System Online. I am F.R.I.D.A.Y. Let's optimize your protocol for maximum velocity. Upload your data.",
     modelConfig: {
-      model: 'google/gemini-2.0-flash-001', // Fast, lightweight model
+      model: 'gemini-2.5-flash', // Using prompt-specified model name
+      config: {} 
     }
   },
   MONDAY: {
@@ -53,7 +53,8 @@ export const AGENT_CONFIG: Record<AgentPersona, { name: string; acronym: string;
     systemInstruction: MONDAY_SYSTEM_INSTRUCTION,
     greeting: "I am M.O.N.D.A.Y. We will not rush. We will go deep. Upload your career history for a full strategic audit.",
     modelConfig: {
-      model: 'google/gemini-2.0-pro-exp-02-05:free', // Pro/Experimental model for deeper reasoning
+      model: 'gemini-2.5-flash', // Fallback to reliable model if Pro isn't available, or use gemini-1.5-pro
+      config: { thinkingConfig: { thinkingBudget: 1024 } } 
     }
   }
 };

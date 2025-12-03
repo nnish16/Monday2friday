@@ -47,12 +47,12 @@ const THEME = {
     }
 };
 
-// --- AICoreSwitch Component (UPDATED: Always Visible Text + Image Restored + Perfect Symmetry) ---
+// --- AICoreSwitch Component (UPDATED: Responsive Width) ---
 const AICoreSwitch: React.FC<{ persona: AgentPersona; onToggle: () => void }> = ({ persona, onToggle }) => {
   return (
     <div 
       onClick={onToggle}
-      className={`relative w-80 h-14 rounded-full p-1.5 cursor-pointer transition-all duration-500 shadow-2xl border overflow-hidden group select-none
+      className={`relative w-full md:w-80 h-14 rounded-full p-1.5 cursor-pointer transition-all duration-500 shadow-2xl border overflow-hidden group select-none shrink-0
         ${persona === 'FRIDAY' 
             ? 'bg-white/60 border-white/60 hover:border-blue-300/50 backdrop-blur-md' 
             : 'bg-[#0A0A0A]/80 border-white/10 hover:border-orange-500/30 backdrop-blur-md'}
@@ -61,10 +61,10 @@ const AICoreSwitch: React.FC<{ persona: AgentPersona; onToggle: () => void }> = 
         {/* Labels - Perfectly centered 50/50 split matching the padding of the parent */}
         <div className="absolute inset-0 z-20 pointer-events-none flex p-1.5">
              <div className="flex-1 flex items-center justify-center">
-                 <span className={`text-[11px] font-black tracking-[0.25em] transition-colors duration-500 ${persona === 'FRIDAY' ? 'text-white' : 'text-gray-500/60'}`}>F.R.I.D.A.Y.</span>
+                 <span className={`text-[9px] sm:text-[11px] font-black tracking-[0.25em] transition-colors duration-500 ${persona === 'FRIDAY' ? 'text-white' : 'text-gray-500/60'}`}>F.R.I.D.A.Y.</span>
              </div>
              <div className="flex-1 flex items-center justify-center">
-                 <span className={`text-[11px] font-black tracking-[0.25em] transition-colors duration-500 ${persona === 'MONDAY' ? 'text-white' : 'text-gray-500/60'}`}>M.O.N.D.A.Y.</span>
+                 <span className={`text-[9px] sm:text-[11px] font-black tracking-[0.25em] transition-colors duration-500 ${persona === 'MONDAY' ? 'text-white' : 'text-gray-500/60'}`}>M.O.N.D.A.Y.</span>
              </div>
         </div>
 
@@ -129,7 +129,17 @@ const App: React.FC = () => {
   
   const theme = THEME[agentPersona];
 
-  // Removed useEffect for initial chat greeting to ensure empty log on start
+  // Logic to auto-collapse sections on mobile/tablets
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setExpandedSections({
+        SUMMARY: false,
+        WORK_EXPERIENCE: false,
+        SKILLS: false
+      });
+      setIsChatOpen(false); // Default to closed chat on mobile
+    }
+  }, []);
   
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -362,13 +372,13 @@ const App: React.FC = () => {
   // --- Renderers ---
 
   const renderIntake = () => (
-    <div className="flex flex-col items-center justify-center min-h-[85vh] px-6 max-w-4xl mx-auto relative z-10">
-      <div className="text-center mb-12 animate-fade-in relative z-20">
-        <h1 className={`text-8xl font-black tracking-tighter mb-4 drop-shadow-sm ${theme.text} leading-none`}>
+    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 md:px-6 max-w-4xl mx-auto relative z-10 w-full">
+      <div className="text-center mb-8 md:mb-12 animate-fade-in relative z-20 w-full">
+        <h1 className={`text-5xl md:text-8xl font-black tracking-tighter mb-4 drop-shadow-sm ${theme.text} leading-none`}>
             {AGENT_CONFIG[agentPersona].name}
         </h1>
-        <div className={`h-1.5 w-32 mx-auto rounded-full bg-gradient-to-r ${theme.accentGradient} mb-8 shadow-[0_0_20px_rgba(0,0,0,0.3)]`}></div>
-        <p className={`text-sm font-bold uppercase tracking-[0.3em] max-w-2xl mx-auto ${theme.subtext}`}>
+        <div className={`h-1.5 w-24 md:w-32 mx-auto rounded-full bg-gradient-to-r ${theme.accentGradient} mb-6 md:mb-8 shadow-[0_0_20px_rgba(0,0,0,0.3)]`}></div>
+        <p className={`text-[10px] md:text-sm font-bold uppercase tracking-[0.3em] max-w-2xl mx-auto ${theme.subtext}`}>
             {AGENT_CONFIG[agentPersona].acronym}
         </p>
       </div>
@@ -377,9 +387,9 @@ const App: React.FC = () => {
         {/* Glow effect behind panel */}
         <div className={`absolute -inset-1 rounded-[2rem] bg-gradient-to-r ${theme.accentGradient} opacity-20 blur-xl group-hover:opacity-30 transition-opacity duration-1000`}></div>
         
-        <div className={`relative rounded-[1.5rem] p-8 ${agentPersona === 'FRIDAY' ? 'bg-white/90' : 'bg-[#0F0F0F]'}`}>
+        <div className={`relative rounded-[1.5rem] p-4 md:p-8 ${agentPersona === 'FRIDAY' ? 'bg-white/90' : 'bg-[#0F0F0F]'}`}>
             <textarea
-            className={`w-full h-80 p-6 rounded-xl resize-none text-lg leading-relaxed font-light outline-none transition-all
+            className={`w-full h-64 md:h-80 p-4 md:p-6 rounded-xl resize-none text-base md:text-lg leading-relaxed font-light outline-none transition-all
                 ${agentPersona === 'FRIDAY' 
                 ? 'bg-gray-50 text-gray-800 placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-100' 
                 : 'bg-black/40 text-gray-200 placeholder-gray-700 focus:bg-black/60 focus:ring-1 focus:ring-orange-500/20'}
@@ -388,15 +398,15 @@ const App: React.FC = () => {
             value={resumeText}
             onChange={(e) => setResumeText(e.target.value)}
             />
-            <div className="mt-8 flex justify-between items-center">
+            <div className="mt-6 md:mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
                 <div className={`text-[10px] font-bold tracking-widest uppercase ${theme.subtext} flex items-center`}>
                     <div className={`w-1.5 h-1.5 rounded-full mr-2 ${resumeText.length > 50 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-gray-400'}`}></div>
-                    {resumeText.length > 0 ? `${resumeText.length} BYTES LOADED` : 'AWAITING INPUT'}
+                    {resumeText.length > 0 ? `${resumeText.length} BYTES` : 'AWAITING INPUT'}
                 </div>
                 <button
                     onClick={handleResumeSubmit}
                     disabled={!resumeText.trim() || isProcessing}
-                    className={`flex items-center px-10 py-4 rounded-xl font-bold text-xs tracking-[0.15em] uppercase transition-all transform hover:translate-y-[-2px] shadow-lg
+                    className={`w-full sm:w-auto flex items-center justify-center px-10 py-4 rounded-xl font-bold text-xs tracking-[0.15em] uppercase transition-all transform hover:translate-y-[-2px] shadow-lg
                     ${!resumeText.trim() 
                         ? 'bg-gray-200 cursor-not-allowed text-gray-400' 
                         : theme.buttonPrimary}`}
@@ -413,31 +423,31 @@ const App: React.FC = () => {
   const renderDashboardHeader = () => {
     if (!resumeData) return null;
     return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className={`${theme.panel} p-6 rounded-3xl shadow-lg border ${theme.panelBorder} flex flex-col justify-between h-48 relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300`}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
+        <div className={`${theme.panel} p-3 md:p-6 rounded-3xl shadow-lg border ${theme.panelBorder} flex flex-col justify-between h-28 md:h-48 relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300 col-span-1`}>
             <div className={`absolute -right-6 -top-6 p-8 opacity-5 group-hover:opacity-10 transition-opacity ${theme.accent} rounded-full border-4 border-current`}></div>
-            <span className={`${theme.subtext} text-[10px] font-bold uppercase tracking-[0.2em]`}>Protocol Health</span>
+            <span className={`${theme.subtext} text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em]`}>Protocol Health</span>
             <div className="flex items-baseline mt-auto relative z-10">
-                <span className={`text-7xl font-thin tracking-tighter ${resumeData.healthScore > 8 ? 'text-emerald-500' : resumeData.healthScore > 5 ? 'text-amber-500' : 'text-rose-500'} drop-shadow-md`}>
+                <span className={`text-4xl md:text-7xl font-thin tracking-tighter ${resumeData.healthScore > 8 ? 'text-emerald-500' : resumeData.healthScore > 5 ? 'text-amber-500' : 'text-rose-500'} drop-shadow-md`}>
                     {resumeData.healthScore}
                 </span>
-                <span className={`ml-3 text-lg font-light opacity-50 ${theme.text}`}>/ 10</span>
+                <span className={`ml-1 md:ml-3 text-xs md:text-lg font-light opacity-50 ${theme.text}`}>/ 10</span>
             </div>
         </div>
         
-        <div className={`${theme.panel} p-6 rounded-3xl shadow-lg border ${theme.panelBorder} flex flex-col justify-between h-48 relative overflow-hidden hover:scale-[1.02] transition-transform duration-300`}>
-            <span className={`${theme.subtext} text-[10px] font-bold uppercase tracking-[0.2em]`}>Critical Vectors</span>
+        <div className={`${theme.panel} p-3 md:p-6 rounded-3xl shadow-lg border ${theme.panelBorder} flex flex-col justify-between h-28 md:h-48 relative overflow-hidden hover:scale-[1.02] transition-transform duration-300 col-span-1`}>
+            <span className={`${theme.subtext} text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em]`}>Critical Vectors</span>
             <div className="flex items-center mt-auto">
-                <div className="bg-rose-500/10 p-3 rounded-xl mr-4 border border-rose-500/20">
-                    <AlertTriangleIcon className="text-rose-500 w-8 h-8" />
+                <div className="bg-rose-500/10 p-2 md:p-3 rounded-xl mr-2 md:mr-4 border border-rose-500/20">
+                    <AlertTriangleIcon className="text-rose-500 w-4 h-4 md:w-8 md:h-8" />
                 </div>
-                <span className={`text-5xl font-light ${theme.text}`}>{resumeData.redFlags.length}</span>
+                <span className={`text-3xl md:text-5xl font-light ${theme.text}`}>{resumeData.redFlags.length}</span>
             </div>
         </div>
 
         <div 
           key={agentPersona}
-          className={`${theme.panel} p-6 rounded-3xl shadow-lg border ${theme.panelBorder} col-span-1 md:col-span-2 ${agentPersona === 'FRIDAY' ? 'animate-flash-friday' : 'animate-flash-monday'} h-48 flex flex-col relative overflow-hidden`}
+          className={`${theme.panel} p-6 rounded-3xl shadow-lg border ${theme.panelBorder} col-span-2 lg:col-span-2 ${agentPersona === 'FRIDAY' ? 'animate-flash-friday' : 'animate-flash-monday'} h-auto min-h-[8rem] md:h-48 flex flex-col relative overflow-hidden`}
         >
             <div className="flex items-center mb-4 shrink-0 justify-between relative z-10">
                 <span className={`${theme.subtext} text-[10px] font-bold uppercase tracking-[0.2em]`}>Primary Objective</span>
@@ -445,7 +455,7 @@ const App: React.FC = () => {
             </div>
             {/* STRICT OVERFLOW HANDLING */}
             <div className="overflow-y-auto custom-scrollbar flex-1 relative z-10 pr-2 min-h-0">
-                <p className={`text-lg font-light leading-snug break-words whitespace-pre-wrap ${theme.text}`}>
+                <p className={`text-sm md:text-lg font-light leading-snug break-words whitespace-pre-wrap ${theme.text}`}>
                     {resumeData.topPriorities[0] || "General Optimization Protocol Initiated."}
                 </p>
             </div>
@@ -465,7 +475,7 @@ const App: React.FC = () => {
                   className={`w-full flex justify-between items-center p-6 transition-colors ${agentPersona === 'FRIDAY' ? 'hover:bg-white' : 'hover:bg-white/5'}`}
               >
                   <div className="flex items-center">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mr-5 transition-colors shadow-sm ${isOpen ? theme.accentBg : (agentPersona === 'FRIDAY' ? 'bg-white border border-gray-100' : 'bg-white/5 border border-white/5')}`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mr-5 transition-colors shadow-sm shrink-0 ${isOpen ? theme.accentBg : (agentPersona === 'FRIDAY' ? 'bg-white border border-gray-100' : 'bg-white/5 border border-white/5')}`}>
                         <FileTextIcon className={`w-6 h-6 ${isOpen ? 'text-white' : theme.subtext}`} />
                     </div>
                     <div className="text-left">
@@ -479,7 +489,7 @@ const App: React.FC = () => {
               </button>
 
               {isOpen && (
-                  <div className={`p-8 border-t animate-fade-in ${theme.panelBorder}`}>
+                  <div className={`p-6 md:p-8 border-t animate-fade-in ${theme.panelBorder}`}>
                       {isOptimizingSummary && !summaryOptions ? (
                         <div className="space-y-4">
                            <div className={`h-4 w-3/4 rounded ${theme.shimmerBase} animate-pulse`}></div>
@@ -487,7 +497,7 @@ const App: React.FC = () => {
                         </div>
                       ) : !summaryOptions ? (
                           <div className="space-y-6">
-                              <p className={`p-8 rounded-3xl border text-lg font-light leading-loose ${agentPersona === 'FRIDAY' ? 'bg-white border-gray-100 text-gray-600 shadow-sm' : 'bg-black/40 border-white/5 text-gray-300'}`}>
+                              <p className={`p-6 md:p-8 rounded-3xl border text-base md:text-lg font-light leading-loose ${agentPersona === 'FRIDAY' ? 'bg-white border-gray-100 text-gray-600 shadow-sm' : 'bg-black/40 border-white/5 text-gray-300'}`}>
                                   "{resumeData.summary || "No summary found."}"
                               </p>
                               <div className="flex items-center justify-end">
@@ -514,7 +524,7 @@ const App: React.FC = () => {
                                             ? `${theme.accentLightBg} ${theme.accentLightBorder} shadow-md ring-1 ${theme.highlightRing}` 
                                             : (agentPersona === 'FRIDAY' ? 'bg-white border-gray-100 hover:border-blue-200 hover:shadow-md' : 'bg-black/20 border-white/5 hover:border-white/10 hover:bg-black/40')}
                                       `}>
-                                          <div className="flex justify-between items-center mb-4">
+                                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-0">
                                               <span className={`text-[9px] font-bold px-3 py-1.5 rounded-md uppercase tracking-widest border
                                                   ${opt.isRecommended 
                                                     ? `${theme.accent} bg-white border-transparent shadow-sm`
@@ -534,11 +544,11 @@ const App: React.FC = () => {
                                           </div>
                                           <p className={`text-base leading-loose ${theme.text}`}>{opt.text}</p>
                                           
-                                          <div className="mt-6 flex justify-between items-end pt-4 border-t border-dashed border-gray-200/20">
-                                             <p className="text-xs opacity-60 font-medium max-w-[80%] italic">{opt.rationale}</p>
+                                          <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-end pt-4 border-t border-dashed border-gray-200/20 gap-4 sm:gap-0">
+                                             <p className="text-xs opacity-60 font-medium max-w-full sm:max-w-[80%] italic">{opt.rationale}</p>
                                              <button 
                                                 onClick={() => handleAcceptSummary(opt.text)} 
-                                                className={`${theme.accent} border ${theme.accentBorder} px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-opacity-10 hover:bg-black transition-colors`}
+                                                className={`${theme.accent} border ${theme.accentBorder} px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-opacity-10 hover:bg-black transition-colors self-end`}
                                              >
                                                 Select
                                              </button>
@@ -567,7 +577,7 @@ const App: React.FC = () => {
                   className={`w-full flex justify-between items-center p-6 transition-colors ${agentPersona === 'FRIDAY' ? 'hover:bg-white' : 'hover:bg-white/5'}`}
               >
                   <div className="flex items-center">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mr-5 transition-colors shadow-sm ${isOpen ? theme.accentBg : (agentPersona === 'FRIDAY' ? 'bg-white border border-gray-100' : 'bg-white/5 border border-white/5')}`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mr-5 transition-colors shadow-sm shrink-0 ${isOpen ? theme.accentBg : (agentPersona === 'FRIDAY' ? 'bg-white border border-gray-100' : 'bg-white/5 border border-white/5')}`}>
                         <TargetIcon className={`w-6 h-6 ${isOpen ? 'text-white' : theme.subtext}`} />
                     </div>
                     <div className="text-left">
@@ -583,7 +593,7 @@ const App: React.FC = () => {
             {isOpen && (
                 <div className={`animate-fade-in border-t ${theme.panelBorder}`}>
                     {/* Role Navigation */}
-                    <div className={`p-6 border-b ${theme.panelBorder} flex justify-between items-center relative overflow-hidden bg-gradient-to-r ${agentPersona === 'FRIDAY' ? 'from-gray-50/50 to-white' : 'from-black/40 to-black/10'}`}>
+                    <div className={`p-4 md:p-6 border-b ${theme.panelBorder} flex justify-between items-center relative overflow-hidden bg-gradient-to-r ${agentPersona === 'FRIDAY' ? 'from-gray-50/50 to-white' : 'from-black/40 to-black/10'}`}>
                          
                         <button 
                             onClick={prevRole} 
@@ -593,9 +603,9 @@ const App: React.FC = () => {
                             <ChevronLeftIcon />
                         </button>
                         
-                        <div className="text-center relative z-10">
-                            <h3 className={`text-xl font-bold tracking-tight ${theme.text}`}>{role.title}</h3>
-                            <p className={`text-sm mt-1 font-mono uppercase tracking-wide opacity-70 ${theme.subtext}`}>{role.company}</p>
+                        <div className="text-center relative z-10 max-w-[60%]">
+                            <h3 className={`text-lg md:text-xl font-bold tracking-tight ${theme.text} truncate`}>{role.title}</h3>
+                            <p className={`text-xs md:text-sm mt-1 font-mono uppercase tracking-wide opacity-70 ${theme.subtext} truncate`}>{role.company}</p>
                             <div className="flex space-x-2 justify-center mt-4">
                                 {resumeData.roles.map((r, idx) => (
                                     <button
@@ -620,7 +630,7 @@ const App: React.FC = () => {
                     <div className={`border-b ${theme.panelBorder} ${agentPersona === 'FRIDAY' ? 'bg-gray-50/80' : 'bg-[#0A0A0A]'}`}>
                         <button 
                             onClick={() => setIsStyleSettingsOpen(!isStyleSettingsOpen)}
-                            className={`w-full flex items-center justify-between px-8 py-4 text-[10px] font-bold uppercase tracking-[0.15em] transition-colors ${theme.subtext} hover:opacity-80`}
+                            className={`w-full flex items-center justify-between px-6 md:px-8 py-4 text-[10px] font-bold uppercase tracking-[0.15em] transition-colors ${theme.subtext} hover:opacity-80`}
                         >
                             <div className="flex items-center space-x-3">
                                 <SlidersIcon className={`w-4 h-4 ${theme.text}`} />
@@ -635,7 +645,7 @@ const App: React.FC = () => {
                         </button>
                         
                         {isStyleSettingsOpen && (
-                            <div className="px-8 pb-8 pt-2 animate-fade-in">
+                            <div className="px-6 md:px-8 pb-8 pt-2 animate-fade-in">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-4">
                                     {categories.map(category => (
                                         <div key={category} className="flex flex-col space-y-3">
@@ -666,7 +676,7 @@ const App: React.FC = () => {
                         )}
                     </div>
 
-                    <div className="p-8 space-y-8 max-h-[800px] overflow-y-auto custom-scrollbar">
+                    <div className="p-4 md:p-8 space-y-8 max-h-[800px] overflow-y-auto custom-scrollbar">
                         {role.bullets.map((bullet, idx) => (
                             <div key={bullet.id} className={`group relative border-b last:border-0 pb-8 last:pb-0 ${theme.panelBorder}`}>
                                 <div className="flex justify-between items-start mb-4">
@@ -680,14 +690,14 @@ const App: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <div className="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex items-center space-x-3 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                                         {/* EXPLICIT COPY BUTTON FOR ORIGINAL */}
                                         <button
                                             onClick={() => handleCopy(bullet.original, bullet.id)}
                                             className={`text-[10px] uppercase font-bold tracking-wider flex items-center px-2 py-1 rounded hover:bg-black/5 transition-colors ${theme.subtext}`}
                                         >
                                             {justCopiedId === bullet.id ? <CheckCircleIcon className="w-3.5 h-3.5 mr-1.5 text-green-500"/> : <CopyIcon className="w-3.5 h-3.5 mr-1.5"/>}
-                                            Copy
+                                            <span className="hidden sm:inline">Copy</span>
                                         </button>
                                         
                                         {bullet.status === 'PENDING' && (
@@ -703,21 +713,21 @@ const App: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className={`relative pl-6 border-l-[2px] transition-colors ${bullet.status === 'APPROVED' ? 'border-emerald-500' : 'border-gray-300/20'}`}>
+                                <div className={`relative pl-4 md:pl-6 border-l-[2px] transition-colors ${bullet.status === 'APPROVED' ? 'border-emerald-500' : 'border-gray-300/20'}`}>
                                     {bullet.status === 'ANALYZING' ? (
                                         <div className="space-y-3 py-2">
                                              <div className={`h-4 w-3/4 rounded ${theme.shimmerBase} animate-pulse`}></div>
                                              <div className={`h-4 w-1/2 rounded ${theme.shimmerBase} animate-pulse`}></div>
                                         </div>
                                     ) : (
-                                        <p className={`text-base leading-relaxed ${bullet.status === 'APPROVED' ? `font-medium ${theme.text}` : `font-light ${theme.subtext}`}`}>
+                                        <p className={`text-sm md:text-base leading-relaxed ${bullet.status === 'APPROVED' ? `font-medium ${theme.text}` : `font-light ${theme.subtext}`}`}>
                                             {bullet.original}
                                         </p>
                                     )}
                                 </div>
 
                                 {bullet.status === 'REVIEW' && bullet.rewrites && (
-                                    <div className={`mt-6 ml-6 space-y-4 animate-fade-in p-6 rounded-[1.5rem] border ${theme.panelBorder} ${agentPersona === 'FRIDAY' ? 'bg-white shadow-sm' : 'bg-black/30'}`}>
+                                    <div className={`mt-6 ml-2 md:ml-6 space-y-4 animate-fade-in p-4 md:p-6 rounded-[1.5rem] border ${theme.panelBorder} ${agentPersona === 'FRIDAY' ? 'bg-white shadow-sm' : 'bg-black/30'}`}>
                                         <div className={`flex justify-between items-center border-b pb-3 mb-2 ${theme.panelBorder}`}>
                                             <h4 className={`text-[10px] font-bold uppercase tracking-[0.2em] ${theme.subtext}`}>
                                                 Optimized Variants
@@ -737,7 +747,7 @@ const App: React.FC = () => {
                                                 <div 
                                                     key={optIdx} 
                                                     className={`
-                                                        rounded-xl border transition-all p-5 relative group hover:scale-[1.01] duration-300
+                                                        rounded-xl border transition-all p-4 md:p-5 relative group hover:scale-[1.01] duration-300
                                                         ${option.isRecommended 
                                                             ? `${theme.panel} ${theme.accentLightBorder} shadow-lg ring-1 ${theme.highlightRing}`
                                                             : (agentPersona === 'FRIDAY' ? 'bg-gray-50 border-gray-100 hover:border-blue-200' : 'bg-white/5 border-white/5 hover:border-white/10')}
@@ -797,7 +807,7 @@ const App: React.FC = () => {
                 className={`w-full flex justify-between items-center p-6 transition-colors ${agentPersona === 'FRIDAY' ? 'hover:bg-white' : 'hover:bg-white/5'}`}
             >
                 <div className="flex items-center">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mr-5 transition-colors shadow-sm ${isOpen ? theme.accentBg : (agentPersona === 'FRIDAY' ? 'bg-white border border-gray-100' : 'bg-white/5 border border-white/5')}`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mr-5 transition-colors shadow-sm shrink-0 ${isOpen ? theme.accentBg : (agentPersona === 'FRIDAY' ? 'bg-white border border-gray-100' : 'bg-white/5 border border-white/5')}`}>
                         <CheckCircleIcon className={`w-6 h-6 ${isOpen ? 'text-white' : theme.subtext}`} />
                     </div>
                     <div className="text-left">
@@ -811,7 +821,7 @@ const App: React.FC = () => {
             </button>
 
             {isOpen && (
-                <div className={`p-8 border-t animate-fade-in ${theme.panelBorder}`}>
+                <div className={`p-6 md:p-8 border-t animate-fade-in ${theme.panelBorder}`}>
                     <div className="mb-8 flex flex-wrap gap-2">
                         {resumeData.skills.map((skill, idx) => (
                             <span key={idx} className={`border px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide ${agentPersona === 'FRIDAY' ? 'bg-white border-gray-200 text-gray-600' : 'bg-white/5 border-white/10 text-gray-400'}`}>
@@ -853,7 +863,7 @@ const App: React.FC = () => {
                             </div>
                             
                             {skillsAnalysis.recommendations.length > 0 && (
-                                <div className={`rounded-2xl p-8 border ${theme.accentLightBg} ${theme.accentLightBorder}`}>
+                                <div className={`rounded-2xl p-6 md:p-8 border ${theme.accentLightBg} ${theme.accentLightBorder}`}>
                                     <h5 className={`text-xs font-bold ${theme.accent} uppercase tracking-widest mb-6 flex items-center`}>
                                         <SparklesIcon className="w-4 h-4 mr-2"/> Recommended Additions
                                     </h5>
@@ -896,7 +906,7 @@ const App: React.FC = () => {
     return (
         <div className={`
             shadow-2xl flex flex-col transition-all duration-500 z-40
-            ${appState === AppState.DASHBOARD ? 'fixed bottom-8 right-8 w-[400px] h-[600px] rounded-[2rem]' : 'h-full rounded-2xl'}
+            ${appState === AppState.DASHBOARD ? 'fixed bottom-0 right-0 w-full h-full md:bottom-8 md:right-8 md:w-[400px] md:h-[600px] md:rounded-[2rem]' : 'h-full rounded-2xl'}
             ${theme.panel} backdrop-blur-xl border ${theme.panelBorder}
         `}>
             <div className={`p-5 border-b flex justify-between items-center rounded-t-[2rem] ${theme.panelBorder}`}>
@@ -967,13 +977,13 @@ const App: React.FC = () => {
   };
 
   const renderMainApp = () => (
-    <div className={`max-w-7xl mx-auto px-6 py-8 h-screen flex flex-col relative font-sans z-10`}>
+    <div className={`max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 md:h-screen min-h-screen flex flex-col relative font-sans z-10`}>
       {/* Background blobs for abstract feel */}
       <div className={`fixed top-[-10%] left-[-5%] w-[800px] h-[800px] rounded-full blur-[120px] opacity-[0.08] pointer-events-none ${agentPersona === 'FRIDAY' ? 'bg-blue-600' : 'bg-orange-600'} abstract-shape`}></div>
       <div className={`fixed bottom-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full blur-[100px] opacity-[0.05] pointer-events-none ${agentPersona === 'FRIDAY' ? 'bg-purple-500' : 'bg-red-800'} abstract-shape`} style={{animationDelay: '2s'}}></div>
 
-      <header className={`flex justify-between items-center mb-8 p-4 rounded-full sticky top-4 z-30 ${theme.panel} shadow-xl border ${theme.panelBorder} backdrop-blur-2xl`}>
-        <div className="flex items-center pl-4">
+      <header className={`flex flex-col md:flex-row justify-between items-center mb-8 p-4 rounded-3xl md:rounded-full md:sticky md:top-4 relative z-30 ${theme.panel} shadow-xl border ${theme.panelBorder} backdrop-blur-2xl space-y-4 md:space-y-0`}>
+        <div className="flex items-center pl-0 md:pl-4">
             <div className={`w-10 h-10 rounded-full mr-5 overflow-hidden shadow-md flex items-center justify-center relative group bg-gradient-to-br ${agentPersona === 'FRIDAY' ? 'from-white to-gray-200' : 'from-gray-800 to-black'}`}>
                  <img 
                   src="https://www.insidequantumtechnology.com/wp-content/uploads/2024/10/unnamed-1024x1024.png" 
@@ -992,10 +1002,10 @@ const App: React.FC = () => {
             </div>
         </div>
         
-        <div className="flex items-center space-x-8 pr-4">
+        <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-8 pr-0 md:pr-4 w-full md:w-auto">
              <AICoreSwitch persona={agentPersona} onToggle={togglePersona} />
 
-            <div className={`h-8 w-px ${agentPersona === 'FRIDAY' ? 'bg-gray-200' : 'bg-white/10'}`}></div>
+            <div className={`hidden sm:block h-8 w-px ${agentPersona === 'FRIDAY' ? 'bg-gray-200' : 'bg-white/10'}`}></div>
 
             <button 
                 onClick={() => {
@@ -1013,8 +1023,8 @@ const App: React.FC = () => {
 
       {renderDashboardHeader()}
 
-      <div className="flex-1 flex gap-8 min-h-0 pb-4 relative z-10">
-        <div className="flex-1 h-full min-h-[500px] overflow-y-auto pr-2 pb-20 custom-scrollbar">
+      <div className="flex-1 flex flex-col gap-8 min-h-0 pb-4 relative z-10">
+        <div className="md:flex-1 md:h-full md:min-h-[500px] md:overflow-y-auto md:pr-2 pb-20 custom-scrollbar h-auto overflow-visible">
             {renderSummarySection()}
             {renderWorkExperienceSection()}
             {renderSkillsSection()}
@@ -1035,20 +1045,20 @@ const App: React.FC = () => {
             <div className={`fixed top-[-20%] left-[-10%] w-[1000px] h-[1000px] rounded-full blur-[150px] opacity-[0.1] pointer-events-none ${agentPersona === 'FRIDAY' ? 'bg-blue-400' : 'bg-orange-700'}`}></div>
             
             {/* Header for Intake */}
-            <div className="absolute top-8 right-8 flex items-center space-x-4 z-50">
+            <div className="absolute top-8 right-0 left-0 flex justify-center md:justify-end md:right-8 z-50 px-4">
                 {appState === AppState.INTAKE && (
                      <AICoreSwitch persona={agentPersona} onToggle={togglePersona} />
                 )}
             </div>
 
             {isProcessing && appState === AppState.ANALYZING ? (
-                 <div className="flex flex-col items-center justify-center h-[70vh] animate-fade-in z-20">
+                 <div className="flex flex-col items-center justify-center h-[70vh] animate-fade-in z-20 px-4">
                     <div className="relative mb-12">
                         <div className={`w-32 h-32 border-t-2 border-b-2 rounded-full animate-spin ${agentPersona === 'FRIDAY' ? 'border-blue-500' : 'border-orange-500'}`}></div>
                         <div className={`absolute inset-0 w-20 h-20 m-auto border-r-2 border-l-2 rounded-full animate-spin-reverse ${agentPersona === 'FRIDAY' ? 'border-purple-400' : 'border-red-500'}`}></div>
                         <div className={`absolute inset-0 w-4 h-4 m-auto rounded-full animate-pulse ${agentPersona === 'FRIDAY' ? 'bg-blue-400' : 'bg-orange-400'}`}></div>
                     </div>
-                    <h2 className={`text-5xl font-thin tracking-tighter ${theme.text}`}>Decrypting Career Data</h2>
+                    <h2 className={`text-4xl md:text-5xl font-thin tracking-tighter ${theme.text} text-center`}>Decrypting Career Data</h2>
                     <p className={`mt-6 font-mono text-xs uppercase tracking-[0.4em] ${theme.subtext}`}>Running Neural Analysis...</p>
                  </div>
             ) : renderIntake()}
