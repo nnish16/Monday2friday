@@ -36,26 +36,20 @@ Your purpose:
 Tone: Intense, strategic, demanding, sophisticated, executive-focused.
 `;
 
-export const AGENT_CONFIG: Record<AgentPersona, { name: string; acronym: string; systemInstruction: string; greeting: string; modelConfig: any }> = {
+export const AGENT_CONFIG: Record<AgentPersona, { name: string; acronym: string; systemInstruction: string; greeting: string; modelId: string }> = {
   FRIDAY: {
     name: "F.R.I.D.A.Y.",
     acronym: "Fast Resume Iteration & Development Assistant for You",
     systemInstruction: FRIDAY_SYSTEM_INSTRUCTION,
     greeting: "System Online. I am F.R.I.D.A.Y. Let's optimize your protocol for maximum velocity. Upload your data.",
-    modelConfig: {
-      model: 'gemini-2.5-flash', // Using prompt-specified model name
-      config: {} 
-    }
+    modelId: "google/gemini-2.0-flash-001" 
   },
   MONDAY: {
     name: "M.O.N.D.A.Y.",
     acronym: "Meticulous Optimization & Narrative Deep Analysis for You",
     systemInstruction: MONDAY_SYSTEM_INSTRUCTION,
     greeting: "I am M.O.N.D.A.Y. We will not rush. We will go deep. Upload your career history for a full strategic audit.",
-    modelConfig: {
-      model: 'gemini-2.5-flash', // Fallback to reliable model if Pro isn't available, or use gemini-1.5-pro
-      config: { thinkingConfig: { thinkingBudget: 1024 } } 
-    }
+    modelId: "google/gemini-2.0-pro-exp-02-05:free"
   }
 };
 
