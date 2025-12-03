@@ -7,8 +7,8 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // Vital: This allows process.env.API_KEY to work in the client-side code
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      // We map process.env.API_KEY in the code to either API_KEY or GOOGLE_API_KEY from the environment
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || env.GOOGLE_API_KEY)
     }
   };
 });

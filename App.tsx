@@ -1,10 +1,9 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { geminiService } from './services/geminiService';
-import { AppState, ChatMessage, ResumeData, BulletPoint, WorkRole, OptimizationFilter, RewriteOption, DashboardSection, SummaryOptimization, SkillsOptimization, AgentPersona } from './types';
+import { AppState, ChatMessage, ResumeData, OptimizationFilter, RewriteOption, SummaryOptimization, SkillsOptimization, AgentPersona } from './types';
 import { AGENT_CONFIG, OPTIMIZATION_OPTIONS } from './constants';
 import { 
-  UploadIcon, CheckCircleIcon, AlertTriangleIcon, 
+  CheckCircleIcon, AlertTriangleIcon, 
   SendIcon, SparklesIcon, ArrowRightIcon, FileTextIcon, TargetIcon,
   CopyIcon, MinimizeIcon, MessageCircleIcon, ChevronLeftIcon, ChevronRightIcon, SlidersIcon,
   RefreshCwIcon, ChevronDownIcon, ChevronUpIcon, TrashIcon

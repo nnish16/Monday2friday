@@ -23,74 +23,63 @@
         font-family: 'Orbitron', sans-serif;
       }
 
-      /* Abstract Backgrounds - Futuristic Tech Grids with Glow */
-      /* Vignette removed to allow grid to extend full screen */
+      /* Abstract Backgrounds - Restored Cleaner Tech Grids */
       
       .bg-grid-friday {
         background-image: 
-            /* Layer 1: The Grid (Horizontal) */
+            /* Layer 1: Subtle Radial Glow at Top */
+            radial-gradient(circle at 50% 0%, rgba(0, 122, 255, 0.12) 0%, transparent 60%),
+            /* Layer 2: Horizontal Grid */
             linear-gradient(to right, rgba(0, 122, 255, 0.08) 1px, transparent 1px),
-            /* Layer 2: The Grid (Vertical) */
-            linear-gradient(to bottom, rgba(0, 122, 255, 0.08) 1px, transparent 1px),
-            /* Layer 3: Sparse Horizontal Flares */
-            linear-gradient(to right, rgba(0, 122, 255, 0) 0%, rgba(0, 122, 255, 0.4) 50%, rgba(0, 122, 255, 0) 100%),
-            /* Layer 4: Sparse Glowing Intersections */
-            radial-gradient(circle at center, rgba(0, 122, 255, 0.8) 0px, transparent 2px);
+            /* Layer 3: Vertical Grid */
+            linear-gradient(to bottom, rgba(0, 122, 255, 0.08) 1px, transparent 1px);
             
         background-size: 
+            100% 100%,
             50px 50px, 
-            50px 50px, 
-            300px 50px, /* Spacing for flares */
-            250px 250px; /* Spacing for stars */
+            50px 50px;
             
         background-position: 
+            0 0,
             0 0, 
-            0 0, 
-            150px 25px, /* Offset flares */
-            25px 25px; /* Offset stars to intersections */
+            0 0;
             
         background-repeat: 
+            no-repeat,
             repeat, 
-            repeat, 
-            space, 
-            space;
+            repeat;
             
         background-attachment: fixed;
       }
       
       .bg-grid-monday {
         background-image: 
-            /* Layer 1: The Grid (Horizontal) */
+            /* Layer 1: Subtle Radial Glow at Top */
+            radial-gradient(circle at 50% 0%, rgba(255, 69, 0, 0.15) 0%, transparent 60%),
+            /* Layer 2: Horizontal Grid */
             linear-gradient(to right, rgba(255, 69, 0, 0.1) 1px, transparent 1px),
-            /* Layer 2: The Grid (Vertical) */
-            linear-gradient(to bottom, rgba(255, 69, 0, 0.1) 1px, transparent 1px),
-            /* Layer 3: Sparse Horizontal Flares */
-            linear-gradient(to right, rgba(255, 69, 0, 0) 0%, rgba(255, 69, 0, 0.5) 50%, rgba(255, 69, 0, 0) 100%),
-            /* Layer 4: Sparse Glowing Intersections */
-            radial-gradient(circle at center, rgba(255, 69, 0, 0.9) 0px, transparent 2px);
+            /* Layer 3: Vertical Grid */
+            linear-gradient(to bottom, rgba(255, 69, 0, 0.1) 1px, transparent 1px);
 
         background-size: 
+            100% 100%,
             50px 50px, 
-            50px 50px, 
-            400px 50px, 
-            300px 300px;
+            50px 50px;
             
         background-position: 
+            0 0,
             0 0, 
-            0 0, 
-            200px 125px, 
-            125px 125px;
+            0 0;
             
         background-repeat: 
+            no-repeat,
             repeat, 
-            repeat, 
-            space, 
-            space;
+            repeat;
             
         background-attachment: fixed;
       }
 
-      /* Glow Animation Classes */
+      /* Glow Animation Classes - Optional if used elsewhere */
       .bg-glow-friday {
         background: radial-gradient(circle at 50% 0%, rgba(0, 122, 255, 0.3) 0%, transparent 60%);
       }

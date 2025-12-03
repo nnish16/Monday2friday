@@ -1,10 +1,10 @@
-
 import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { AGENT_CONFIG, OPTIMIZATION_OPTIONS, PM_SUMMARY_TEMPLATE } from "../constants";
 import { ResumeData, OptimizationFilter, SummaryOptimization, SkillsOptimization, AgentPersona } from "../types";
 
 // Initialize Gemini Client
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// We cast process.env as any to avoid TS2580 since we've added @types/node but want to be explicit for the build system
+const ai = new GoogleGenAI({ apiKey: (process.env as any).API_KEY });
 
 // Schema for initial resume analysis
 const analysisSchema = {
@@ -102,11 +102,9 @@ const skillsSchema = {
 export class GeminiService {
   private chat: Chat;
   private currentSystemInstruction: string;
-  private currentPersona: AgentPersona;
   private currentModelConfig: any;
 
   constructor() {
-    this.currentPersona = 'FRIDAY';
     this.currentSystemInstruction = AGENT_CONFIG.FRIDAY.systemInstruction;
     this.currentModelConfig = AGENT_CONFIG.FRIDAY.modelConfig;
     
@@ -120,7 +118,6 @@ export class GeminiService {
   }
 
   setPersona(persona: AgentPersona) {
-    this.currentPersona = persona;
     this.currentSystemInstruction = AGENT_CONFIG[persona].systemInstruction;
     this.currentModelConfig = AGENT_CONFIG[persona].modelConfig;
     
