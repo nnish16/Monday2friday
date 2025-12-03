@@ -1,12 +1,10 @@
+
 import { AGENT_CONFIG, OPTIMIZATION_OPTIONS, PM_SUMMARY_TEMPLATE } from "../constants";
 import { ResumeData, OptimizationFilter, SummaryOptimization, SkillsOptimization, AgentPersona } from "../types";
 
 // Access the API key injected by Vite
 const API_KEY = (process.env as any).API_KEY;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-
-// Default model to use on OpenRouter (using Gemini 2.0 Flash as it is fast and cheap/free on OR)
-const DEFAULT_MODEL = "google/gemini-2.0-flash-001";
 
 // --- Schemas (represented as JSON objects for the prompt) ---
 
@@ -70,13 +68,12 @@ export class GeminiService {
 
   constructor() {
     this.currentSystemInstruction = AGENT_CONFIG.FRIDAY.systemInstruction;
-    this.currentModel = DEFAULT_MODEL;
+    this.currentModel = AGENT_CONFIG.FRIDAY.modelConfig.model;
   }
 
   setPersona(persona: AgentPersona) {
     this.currentSystemInstruction = AGENT_CONFIG[persona].systemInstruction;
-    // We stick to the default model for stability, or could map persona to specific OR models if desired
-    this.currentModel = DEFAULT_MODEL; 
+    this.currentModel = AGENT_CONFIG[persona].modelConfig.model;
   }
 
   /**

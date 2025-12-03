@@ -44,8 +44,7 @@ export const AGENT_CONFIG: Record<AgentPersona, { name: string; acronym: string;
     systemInstruction: FRIDAY_SYSTEM_INSTRUCTION,
     greeting: "System Online. I am F.R.I.D.A.Y. Let's optimize your protocol for maximum velocity. Upload your data.",
     modelConfig: {
-      model: 'gemini-2.5-flash',
-      config: { thinkingConfig: { thinkingBudget: 0 } } // Disable thinking for speed
+      model: 'google/gemini-2.0-flash-001', // Fast, lightweight model
     }
   },
   MONDAY: {
@@ -54,8 +53,7 @@ export const AGENT_CONFIG: Record<AgentPersona, { name: string; acronym: string;
     systemInstruction: MONDAY_SYSTEM_INSTRUCTION,
     greeting: "I am M.O.N.D.A.Y. We will not rush. We will go deep. Upload your career history for a full strategic audit.",
     modelConfig: {
-      model: 'gemini-2.5-flash', // Use Flash but enable thinking
-      config: { thinkingConfig: { thinkingBudget: 2048 } } // Enable thinking for depth/reasoning
+      model: 'google/gemini-2.0-pro-exp-02-05:free', // Pro/Experimental model for deeper reasoning
     }
   }
 };
