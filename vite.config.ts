@@ -6,11 +6,9 @@ export default defineConfig(({ mode }) => {
   // We explicitly check process.cwd() and cast to any to avoid TS errors
   const env = loadEnv(mode, (process as any).cwd(), '');
   
-  // Vercel injects environment variables into process.env
-  // We prioritise variables in this order:
-  // 1. Vite loaded env (local .env files)
-  // 2. process.env directly (Vercel system vars)
-  const apiKey = env.API_KEY || env.GOOGLE_API_KEY || (process.env as any).GOOGLE_API_KEY || (process.env as any).API_KEY;
+  // OpenRouter or Google Key
+  const apiKey = env.OPENROUTER_API_KEY || env.GOOGLE_API_KEY || env.API_KEY || 
+                 (process.env as any).OPENROUTER_API_KEY || (process.env as any).GOOGLE_API_KEY || (process.env as any).API_KEY;
 
   return {
     plugins: [react()],

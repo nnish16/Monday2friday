@@ -1,134 +1,145 @@
-import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { AGENT_CONFIG, OPTIMIZATION_OPTIONS, PM_SUMMARY_TEMPLATE } from "../constants";
 import { ResumeData, OptimizationFilter, SummaryOptimization, SkillsOptimization, AgentPersona } from "../types";
 
-// Initialize Gemini Client
-// We cast process.env as any to avoid TS2580 since we've added @types/node but want to be explicit for the build system
-const ai = new GoogleGenAI({ apiKey: (process.env as any).API_KEY });
+// Access the API key injected by Vite
+const API_KEY = (process.env as any).API_KEY;
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-// Schema for initial resume analysis
+// Default model to use on OpenRouter (using Gemini 2.0 Flash as it is fast and cheap/free on OR)
+const DEFAULT_MODEL = "google/gemini-2.0-flash-001";
+
+// --- Schemas (represented as JSON objects for the prompt) ---
+
 const analysisSchema = {
-  type: Type.OBJECT,
-  properties: {
-    healthScore: { type: Type.NUMBER, description: "Overall score 1-10" },
-    redFlags: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of critical issues found" },
-    topPriorities: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Top 3 things to fix" },
-    summary: { type: Type.STRING, description: "The parsed summary/headline from the resume" },
-    roles: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          title: { type: Type.STRING },
-          company: { type: Type.STRING },
-          bullets: { 
-            type: Type.ARRAY, 
-            items: { type: Type.STRING },
-            description: "List of raw bullet points for this role"
-          }
-        }
-      }
-    },
-    skills: { type: Type.ARRAY, items: { type: Type.STRING } }
-  },
-  required: ["healthScore", "redFlags", "summary", "roles", "skills"]
+  healthScore: "number (1-10)",
+  redFlags: ["string (critical issues)"],
+  topPriorities: ["string (top 3 fixes)"],
+  summary: "string (parsed summary)",
+  roles: [
+    {
+      title: "string",
+      company: "string",
+      bullets: ["string (raw bullet text)"]
+    }
+  ],
+  skills: ["string"]
 };
 
-// Schema for bullet optimization with multiple options
 const optimizationSchema = {
-  type: Type.OBJECT,
-  properties: {
-    avcr_analysis: {
-      type: Type.OBJECT,
-      properties: {
-        action_verb: { type: Type.OBJECT, properties: { current: { type: Type.STRING }, strength: { type: Type.STRING }, feedback: { type: Type.STRING } } },
-        context: { type: Type.OBJECT, properties: { current: { type: Type.STRING }, clarity: { type: Type.STRING }, feedback: { type: Type.STRING } } },
-        result: { type: Type.OBJECT, properties: { current: { type: Type.STRING }, specificity: { type: Type.STRING }, feedback: { type: Type.STRING } } },
-        metric: { type: Type.OBJECT, properties: { current: { type: Type.STRING }, quantified: { type: Type.BOOLEAN }, feedback: { type: Type.STRING } } }
-      }
-    },
-    rewrites: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          text: { type: Type.STRING, description: "The rewrite text" },
-          rationale: { type: Type.STRING, description: "Why this is good" },
-          label: { type: Type.STRING, description: "Label like 'Concise 1-Liner' or 'High Impact'" },
-          isRecommended: { type: Type.BOOLEAN, description: "True if this is the single best/recommended option" }
-        }
-      },
-      description: "Provide exactly 3 distinct rewrite options"
+  avcr_analysis: {
+    action_verb: { current: "string", strength: "STRONG | WEAK | MISSING", feedback: "string" },
+    context: { current: "string", clarity: "CLEAR | VAGUE | MISSING", feedback: "string" },
+    result: { current: "string", specificity: "SPECIFIC | VAGUE | MISSING", feedback: "string" },
+    metric: { current: "string", quantified: "boolean", feedback: "string" }
+  },
+  rewrites: [
+    {
+      text: "string (the rewrite)",
+      rationale: "string (why it is better)",
+      label: "string (e.g., 'Concise 1-Liner')",
+      isRecommended: "boolean"
     }
-  }
+  ]
 };
 
 const summarySchema = {
-  type: Type.OBJECT,
-  properties: {
-    rewrites: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          text: { type: Type.STRING },
-          rationale: { type: Type.STRING },
-          label: { type: Type.STRING },
-          isRecommended: { type: Type.BOOLEAN }
-        }
-      }
+  rewrites: [
+    {
+      text: "string",
+      rationale: "string",
+      label: "string",
+      isRecommended: "boolean"
     }
-  }
+  ]
 };
 
 const skillsSchema = {
-  type: Type.OBJECT,
-  properties: {
-    categorized: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          category: { type: Type.STRING },
-          skills: { type: Type.ARRAY, items: { type: Type.STRING } }
-        }
-      }
-    },
-    missing_critical: { type: Type.ARRAY, items: { type: Type.STRING } },
-    recommendations: { type: Type.ARRAY, items: { type: Type.STRING } }
-  }
+  categorized: [
+    {
+      category: "string",
+      skills: ["string"]
+    }
+  ],
+  missing_critical: ["string"],
+  recommendations: ["string"]
 };
 
 export class GeminiService {
-  private chat: Chat;
   private currentSystemInstruction: string;
-  private currentModelConfig: any;
+  private currentModel: string;
 
   constructor() {
     this.currentSystemInstruction = AGENT_CONFIG.FRIDAY.systemInstruction;
-    this.currentModelConfig = AGENT_CONFIG.FRIDAY.modelConfig;
-    
-    this.chat = ai.chats.create({
-      model: this.currentModelConfig.model,
-      config: {
-        systemInstruction: this.currentSystemInstruction,
-        ...this.currentModelConfig.config
-      }
-    });
+    this.currentModel = DEFAULT_MODEL;
   }
 
   setPersona(persona: AgentPersona) {
     this.currentSystemInstruction = AGENT_CONFIG[persona].systemInstruction;
-    this.currentModelConfig = AGENT_CONFIG[persona].modelConfig;
-    
-    // Re-initialize chat with new instruction and model config
-    this.chat = ai.chats.create({
-      model: this.currentModelConfig.model,
-      config: {
-        systemInstruction: this.currentSystemInstruction,
-        ...this.currentModelConfig.config
-      }
+    // We stick to the default model for stability, or could map persona to specific OR models if desired
+    this.currentModel = DEFAULT_MODEL; 
+  }
+
+  /**
+   * Helper to call OpenRouter API
+   */
+  private async callOpenRouter(messages: any[], jsonSchema?: any): Promise<any> {
+    if (!API_KEY) {
+      throw new Error("API Key missing. Please check your Vercel Environment Variables (OPENROUTER_API_KEY).");
+    }
+
+    // Append JSON instruction if schema is provided
+    if (jsonSchema) {
+      const schemaString = JSON.stringify(jsonSchema, null, 2);
+      messages.push({
+        role: "system",
+        content: `IMPORTANT: Output STRICT JSON only. No markdown code blocks. The JSON must follow this structure:\n${schemaString}`
+      });
+    }
+
+    const response = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://friday-agent.vercel.app', // Optional: Site URL
+        'X-Title': 'F.R.I.D.A.Y. Agent', // Optional: App Name
+      },
+      body: JSON.stringify({
+        model: this.currentModel,
+        messages: [
+            {
+                role: "system",
+                content: this.currentSystemInstruction
+            },
+            ...messages
+        ],
+        response_format: { type: "json_object" }, // Enforce JSON mode
+        temperature: 0.7,
+      }),
     });
+
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`OpenRouter API Error (${response.status}): ${errText}`);
+    }
+
+    const result = await response.json();
+    
+    if (result.choices && result.choices.length > 0) {
+        const content = result.choices[0].message.content;
+        try {
+            // Clean markdown code blocks if present (common with some models despite json_object mode)
+            const cleanJson = content.replace(/```json\n?|\n?```/g, "").trim();
+            return JSON.parse(cleanJson);
+        } catch (e) {
+            console.error("Failed to parse JSON", content);
+            // If it's a chat message (not JSON schema restricted), return text
+            if (!jsonSchema) return content;
+            throw new Error("Invalid JSON response from model");
+        }
+    }
+    
+    throw new Error("No response from AI model.");
   }
 
   async analyzeResume(text: string): Promise<ResumeData> {
@@ -144,25 +155,17 @@ export class GeminiService {
     ${text}
     `;
 
-    const response = await ai.models.generateContent({
-      model: this.currentModelConfig.model,
-      contents: prompt,
-      config: {
-        systemInstruction: this.currentSystemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: analysisSchema,
-        ...this.currentModelConfig.config
-      }
-    });
-
-    const data = JSON.parse(response.text || "{}");
+    const data = await this.callOpenRouter([
+        { role: "user", content: prompt }
+    ], analysisSchema);
     
+    // Ensure robust fallback for array mapping
     return {
-      healthScore: data.healthScore,
-      redFlags: data.redFlags,
-      topPriorities: data.topPriorities,
-      summary: data.summary,
-      skills: data.skills,
+      healthScore: data.healthScore || 5,
+      redFlags: data.redFlags || [],
+      topPriorities: data.topPriorities || [],
+      summary: data.summary || "",
+      skills: data.skills || [],
       roles: (data.roles || []).map((r: any, rIdx: number) => ({
         id: `role-${rIdx}`,
         title: r.title || "Untitled Role",
@@ -214,18 +217,9 @@ export class GeminiService {
     ${styleInstruction}
     `;
 
-    const response = await ai.models.generateContent({
-      model: this.currentModelConfig.model,
-      contents: prompt,
-      config: {
-        systemInstruction: this.currentSystemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: optimizationSchema,
-        ...this.currentModelConfig.config
-      }
-    });
-
-    return JSON.parse(response.text || "{}");
+    return await this.callOpenRouter([
+        { role: "user", content: prompt }
+    ], optimizationSchema);
   }
 
   async optimizeSummary(currentSummary: string, resumeContext: string): Promise<SummaryOptimization> {
@@ -248,18 +242,9 @@ export class GeminiService {
       Highlight the best option as recommended.
     `;
     
-    const response = await ai.models.generateContent({
-      model: this.currentModelConfig.model,
-      contents: prompt,
-      config: {
-        systemInstruction: this.currentSystemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: summarySchema,
-        ...this.currentModelConfig.config
-      }
-    });
-
-    return JSON.parse(response.text || "{}");
+    return await this.callOpenRouter([
+        { role: "user", content: prompt }
+    ], summarySchema);
   }
 
   async optimizeSkills(currentSkills: string[]): Promise<SkillsOptimization> {
@@ -272,23 +257,42 @@ export class GeminiService {
       3. Suggest recommendations.
     `;
     
-    const response = await ai.models.generateContent({
-      model: this.currentModelConfig.model,
-      contents: prompt,
-      config: {
-        systemInstruction: this.currentSystemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: skillsSchema,
-        ...this.currentModelConfig.config
-      }
-    });
-
-    return JSON.parse(response.text || "{}");
+    return await this.callOpenRouter([
+        { role: "user", content: prompt }
+    ], skillsSchema);
   }
 
   async chatWithAgent(message: string): Promise<string> {
-    const response = await this.chat.sendMessage({ message });
-    return response.text || "I couldn't process that.";
+    // For chat, we don't strictly enforce JSON, we just want a text response
+    try {
+        const response = await fetch(OPENROUTER_URL, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${API_KEY}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://friday-agent.vercel.app',
+              'X-Title': 'F.R.I.D.A.Y. Agent',
+            },
+            body: JSON.stringify({
+              model: this.currentModel,
+              messages: [
+                  { role: "system", content: this.currentSystemInstruction },
+                  { role: "user", content: message }
+              ]
+            }),
+          });
+      
+          if (!response.ok) return "I couldn't process that command.";
+      
+          const result = await response.json();
+          if (result.choices && result.choices.length > 0) {
+              return result.choices[0].message.content;
+          }
+          return "No response received.";
+    } catch (e) {
+        console.error(e);
+        return "System Error: Unable to connect to neural core.";
+    }
   }
 }
 
